@@ -3,7 +3,7 @@ source "$HOME/ghostAPT/data.lib"
 source "$HOME/ghostAPT/interface.lib"
 code-goes-below
 
-scriptname="Find - Modern"
+scriptname="Find (Modern)"
 author="JCore92"
 version="1.0"
 

@@ -1,0 +1,238 @@
+#!/bin/bash
+source "$HOME/ghostAPT/data.lib"
+source "$HOME/ghostAPT/interface.lib"
+code-goes-below
+
+scriptname="Docker Manager"
+author="The Ghost Team"
+version="1.3"
+
+# Function to check if Docker is installed
+check_docker_installed() {
+    if command -v docker &> /dev/null; then
+        echo "Docker is installed."
+        return 0
+    else
+        echo "Docker is not installed."
+        return 1
+    fi
+}
+
+# Function to display the main menu
+display_menu() {
+    echo "
+Docker Management Menu"
+    echo "---------------------"
+    if check_docker_installed; then
+        echo "1. List running containers"
+        echo "2. Start a container"
+        echo "3. Stop a container"
+        echo "4. Remove a container"
+        echo "5. List images"
+        echo "6. Pull an image"
+        echo "7. Remove an image"
+        echo "---------------------"
+        echo "8. Add $USER to Docker group"
+        echo "9. Create Docker Volumes Shortcut"
+        echo "10. Create Desktop + Start Menu Shortcuts"
+        echo "---------------------"
+        echo "11. Install Portainer"
+        echo "12. Open Portainer in browser"
+        echo "---------------------"
+        echo "13. Uninstall Docker"
+        echo "14. Exit"
+    else
+        echo "1. Install Docker"
+        echo "2. Exit"
+    fi
+    echo "---------------------"
+    read -p "Enter your choice: " choice
+    handle_choice "$choice"
+}
+
+# Function to handle user choices
+handle_choice() {
+    local choice=$1
+    if check_docker_installed; then
+        case $choice in
+            1) list_containers ;;
+            2) start_container ;;
+            3) stop_container ;;
+            4) remove_container ;;
+            5) list_images ;;
+            6) pull_image ;;
+            7) remove_image ;;
+            8) addtodockergroup ;;
+            9) dockervolumeshortcut ;;
+            10) createiconsdockermanager ;;
+            11) install_portainer ;;
+            12) open_portainer ;;
+            13) uninstall_docker ;;
+            14) exit 0 ;;
+            *) echo "Invalid choice. Please try again." ;;
+        esac
+    else
+        case $choice in
+            1) install_docker ;;
+            2) exit 0 ;;
+            *) echo "Invalid choice. Please try again." ;;
+        esac
+    fi
+}
+
+# Function to list running containers
+list_containers() {
+    docker ps
+}
+
+# Function to start a container
+start_container() {
+    read -p "Enter the container ID or name: " container
+    docker start "$container"
+}
+
+# Function to stop a container
+stop_container() {
+    read -p "Enter the container ID or name: " container
+    docker stop "$container"
+}
+
+# Function to remove a container
+remove_container() {
+    read -p "Enter the container ID or name: " container
+    docker rm "$container"
+}
+
+# Function to list images
+list_images() {
+    docker images
+}
+
+# Function to pull an image
+pull_image() {
+    read -p "Enter the image name: " image
+    docker pull "$image"
+}
+
+# Function to remove an image
+remove_image() {
+    read -p "Enter the image name: " image
+    docker rmi "$image"
+}
+
+# Create Docker Volume shortcut on the desktop
+
+dockervolumeshortcut () {
+
+echo "[Desktop Entry]
+Categories=Qt;KDE;System;FileTools;FileManager;
+Exec=dolphin %u admin:///var/lib/docker/volumes/
+GenericName[en_US]=File Manager
+GenericName=File Manager
+Icon=folder-docker
+InitialPreference=10
+Keywords=files;file management;file browsing;samba;network shares;Explorer;Finder;
+MimeType=inode/directory;
+Name[en_US]=Docker Volumes
+Name=Docker Volumes
+Path=
+StartupNotify=true
+StartupWMClass=dolphin
+Terminal=false
+TerminalOptions=
+Type=Application
+X-DBUS-ServiceName=org.kde.dolphin
+X-DocPath=dolphin/index.html
+X-KDE-Shortcuts=Meta+E
+X-KDE-SubstituteUID=false
+X-KDE-Username=
+" | tee $HOME/Desktop/"Docker Volumes" ; chmod u+x $HOME/Desktop/"Docker Volumes" ; sudo cp -fv $HOME/Desktop/"Docker Volumes" /usr/share/applications/"Docker Volumes.desktop"
+
+echo "Desktop + Start Menu Icons Created."
+
+}
+
+createiconsdockermanager () {
+
+    echo "#!/usr/bin/env xdg-open
+[Desktop Entry]
+Version=1.0
+Name=Docker Manager
+GenericName=Docker Manager
+
+Exec=bash $HOME/ghostAPT/\"Server Tools\"/\"Docker Manager.ghost\"
+StartupNotify=true
+Terminal=true
+Icon=text-dockerfile
+Type=Application
+Categories=Utilities;
+" | tee $HOME/Desktop/"Docker Manager" ; chmod u+x $HOME/Desktop/"Docker Manager" ; sudo cp -fv $HOME/Desktop/"Docker Manager" /usr/share/applications/"Docker Manager.desktop"
+
+echo "Desktop + Start Menu Icons Created."
+
+}
+
+addtodockergroup () {
+    echo "
+You must restart your computer for changes to take effect.
+"
+    sudo usermod -aG docker $USER
+    newgrp docker
+
+}
+
+# Function to install Docker
+install_docker() {
+    echo "Installing Docker..."
+    sudo apt-get update
+    sudo apt-get install -y docker.io docker-compose
+    sudo systemctl start docker
+    sudo systemctl enable docker
+    createiconsdockermanager
+    dockervolumeshortcut
+    addtodockergroup &
+    echo "
+You must restart your computer to use Docker Manager.
+
+Don't forget to add yourself to the Docker group (Option 8) before you do.
+"
+    echo "Docker has been installed."
+}
+
+uninstall_docker() {
+    echo "Uninstalling Docker..."
+    sudo apt-get remove --purge docker.io docker-compose -y
+    sudo apt-get autoremove -y
+    sudo rm -rfv "$HOME/Desktop/Docker Manager" "/usr/share/applications/Docker Manager.desktop" "$HOME/Desktop/Docker Volumes" "/usr/share/applications/Docker Volumes.desktop"
+    echo "Docker has been uninstalled."
+    entertocontinue
+    exit
+}
+
+# Function to install Portainer
+install_portainer() {
+    echo "Installing Portainer..."
+    sudo docker volume create portainer_data
+    sudo docker run -d -p 9000:9000 --name portainer --restart=always -v /var/run/docker.sock:/var/run/docker.sock -v portainer_data:/data portainer/portainer-ce
+    echo "Portainer has been installed and is running."
+}
+
+# Function to open Portainer in the browser
+open_portainer() {
+    if command -v xdg-open &> /dev/null; then
+        xdg-open http://localhost:9000 >/dev/null 2>&1 &
+    elif command -v x-www-browser &> /dev/null; then
+        x-www-browser http://localhost:9000 >/dev/null 2>&1 &
+    elif command -v gnome-open &> /dev/null; then
+        gnome-open http://localhost:9000 >/dev/null 2>&1 &
+    else
+        echo "Could not open browser. Please open http://localhost:9000 manually."
+    fi
+}
+
+# Main script execution
+while true; do
+    display_menu
+done
+
+code-goes-above-^

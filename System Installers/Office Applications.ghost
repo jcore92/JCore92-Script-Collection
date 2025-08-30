@@ -1,0 +1,22 @@
+#!/bin/bash
+source "$HOME/ghostAPT/data.lib"
+source "$HOME/ghostAPT/interface.lib"
+code-goes-below
+
+scriptname="Office Applications"
+author="The Ghost Team"
+version="1.0"
+
+installflatpaks (){
+
+flatpak install -y --noninteractive flathub "com.bitwarden.desktop" "org.kde.marknote"
+
+}
+
+sudo apt update
+
+sudo apt-get install kate ark gwenview kcalc kfind nextcloud-desktop bibletime calibre goldendict libreoffice skanlite okular -y
+
+installflatpaks
+
+code-goes-above-^

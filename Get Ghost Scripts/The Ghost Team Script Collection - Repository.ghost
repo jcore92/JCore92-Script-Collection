@@ -1,0 +1,153 @@
+#!/bin/bash
+source "$HOME/ghostAPT/data.lib"
+source "$HOME/ghostAPT/interface.lib"
+code-goes-below
+
+scriptname="The Ghost Team Script Collection - Repository"
+author="The Ghost Team"
+version="1.1"
+
+download_update() {
+    # Define an array of files and their corresponding directories
+    declare -A files=(
+        ["https://github.com/jcore92/The-Ghost-Team-Script-Collection/raw/refs/heads/main/Get%20Ghost%20Scripts/The%20Ghost%20Team%20Script%20Collection%20-%20Repository.ghost"]="$localinstalldirectory/Get Ghost Scripts"
+    )
+
+    # Loop through the array and download each file
+    for file in "${!files[@]}"; do
+        directory="${files[$file]}"
+        filename=$(basename "$file")
+        decoded_filename=$(urldecode "$filename")
+        full_path="$directory/$decoded_filename"
+
+        # Create the directory if it doesn't exist
+        if [[ ! -d "$directory" ]]; then
+            mkdir -p "$directory"
+        fi
+
+        # Download the file and overwrite if it exists
+        echo "Downloading $file
+to $directory/$decoded_filename"
+
+        wget -O "$directory/$decoded_filename" "$file"
+
+        done
+}
+
+checkforupdates() {
+
+    executeupdatedfile (){
+
+    nohup konsole -e "bash '$HOME/ghostAPT/Get Ghost Scripts/The Ghost Team Script Collection - Repository.ghost'" &
+
+    }
+
+
+    echo "
+Checking if $scriptname needs updates...
+"
+
+    remote_file_loc="https://github.com/jcore92/The-Ghost-Team-Script-Collection/raw/refs/heads/main/Get%20Ghost%20Scripts/The%20Ghost%20Team%20Script%20Collection%20-%20Repository.ghost"
+
+    remote_version=$(curl -L -s "$remote_file_loc" | grep -oP '(?<=version=")[^"]*')
+
+    if [[ $remote_version =~ ([0-9]+\.[0-9]+) ]]; then
+        remote_version=${BASH_REMATCH[1]}
+    fi
+
+    if [[ $remote_version > $version ]]; then
+        echo "There's an update available!"
+        echo ""
+        echo "Update available for $scriptname, version: $remote_version. Do you want to update?"
+
+        select yn in "Yes" "No"; do
+            case $yn in
+                Yes )
+                    download_update
+                    signatureupdate-force
+                    entertocontinue | center
+                    executeupdatedfile
+                    sleep 2
+                    exit
+                    ;;
+                No )
+                    echo "Update cancelled."
+                    sleep 2
+                    break
+                    ;;
+            esac
+        done
+
+    elif [[ $remote_version < $version ]]; then
+        echo "Version $version"
+        echo "$scriptname is up to date."
+    else
+        echo "$scriptname is up to date.."
+    fi
+
+    sleep 2
+}
+
+# Function to display the warning message
+show_warning() {
+    echo "
+WARNING: This script may reset any modified \"$scriptname\" scripts made by $author."
+    echo "         Other 3rd party installed scripts will not be targeted."
+    echo "
+         Do you want to proceed? (y/n)"
+    read -r response
+    if [[ "$response" != "y" ]]; then
+        echo "Operation cancelled."
+        exit 1
+    fi
+}
+
+# Function to URL decode a string
+urldecode() {
+    local url_encoded="$1"
+    local url_decoded=$(echo -e "${url_encoded//%/\\x}")
+    echo "$url_decoded"
+}
+
+# Function to download files
+download_files() {
+    # Define an array of files and their corresponding directories
+    declare -A files=(
+        ["https://github.com/jcore92/The-Ghost-Team-Script-Collection/raw/refs/heads/main/System%20Installers/Common%20Dependencies.ghost"]="$localinstalldirectory/System Installers"
+        ["https://github.com/jcore92/The-Ghost-Team-Script-Collection/raw/refs/heads/main/System%20Installers/Web%20Browsers%20&%20Social.ghost"]="$localinstalldirectory/System Installers"
+        ["https://github.com/jcore92/The-Ghost-Team-Script-Collection/raw/refs/heads/main/System%20Installers/Multimedia%20Applications.ghost"]="$localinstalldirectory/System Installers"
+        ["https://github.com/jcore92/The-Ghost-Team-Script-Collection/raw/refs/heads/main/System%20Installers/Office%20Applications.ghost"]="$localinstalldirectory/System Installers"
+        ["https://github.com/jcore92/The-Ghost-Team-Script-Collection/raw/refs/heads/main/System%20Installers/Wallpaper%20&%20Themes.ghost"]="$localinstalldirectory/System Installers"
+        ["https://github.com/jcore92/The-Ghost-Team-Script-Collection/raw/refs/heads/main/System%20Installers/System%20Admin%20Applications.ghost"]="$localinstalldirectory/System Installers"
+        ["https://github.com/jcore92/The-Ghost-Team-Script-Collection/raw/refs/heads/main/Server%20Tools/Docker%20Manager.ghost"]="$localinstalldirectory/Server Tools"
+        ["https://github.com/jcore92/The-Ghost-Team-Script-Collection/raw/refs/heads/main/System%20Security/ClamAV.ghost"]="$localinstalldirectory/System Security"
+    )
+
+    # Loop through the array and download each file
+    for file in "${!files[@]}"; do
+        directory="${files[$file]}"
+        filename=$(basename "$file")
+        decoded_filename=$(urldecode "$filename")
+        full_path="$directory/$decoded_filename"
+
+        # Create the directory if it doesn't exist
+        if [[ ! -d "$directory" ]]; then
+            mkdir -p "$directory"
+        fi
+
+        # Download the file and overwrite if it exists
+        echo "Downloading $file
+to $directory/$decoded_filename"
+
+        wget -O "$directory/$decoded_filename" "$file"
+
+    done
+}
+
+# Main script execution
+checkforupdates
+show_warning
+download_files
+signatureupdate-force
+
+code-goes-above-^

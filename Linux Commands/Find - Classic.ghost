@@ -1,0 +1,39 @@
+#!/bin/bash
+source "$HOME/ghostAPT/data.lib"
+source "$HOME/ghostAPT/interface.lib"
+code-goes-below
+
+scriptname="Find - Classic"
+author="JCore92"
+version="1.0"
+
+# Interactive file search: type pattern, press Enter to search
+# Supports wildcards: *, ?, [a-z], etc.
+
+echo "📁 Interactive File Search (press Enter to search, 'quit' to exit)"
+echo "💡 Examples: *.pdf, config*, data?.log, [abc]*.txt"
+echo ""
+
+while true; do
+    # Prompt user for input
+    read -r -p "🔍 Search for file (with wildcards): " search_term
+
+    # Exit if user types 'quit', 'exit', or just presses Enter with no input
+    [[ -z "$search_term" || "$search_term" =~ ^(quit|exit)$ ]] && echo "👋 Goodbye!" && exit 0
+
+    # Run find with the search term (case-insensitive, only files)
+    echo ""
+    echo "🔎 Searching for: '$search_term'"
+    echo "----------------------------------------"
+
+    # Use eval to allow shell-style globbing (wildcards), but safely pass to find
+    find . -iname "$search_term" -type f 2>/dev/null | sort
+
+    # Show how many results were found
+    count=$(find /home -iname "$search_term" -type f 2>/dev/null | wc -l)
+    echo "----------------------------------------"
+    echo "✅ Found $count file(s)."
+    echo ""
+done
+
+code-goes-above-^

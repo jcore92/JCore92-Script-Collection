@@ -5,7 +5,34 @@ code-goes-below
 
 scriptname="JCore92 Script Collection (Repository)"
 author="JCore92"
-version="1.0"
+version="1.1"
+
+cleanup_old_files (){
+
+    # Cleanup function: accepts a file path and removes it if it exists
+    cleanup_old_file() {
+        local filepath="$1"
+
+        if [ -f "$filepath" ]; then
+            echo "Removing old file: $filepath"
+            rm -rfv "$filepath"
+        fi
+    }
+
+    # List of old repository files to clean up (during update)
+    OLD_SCRIPTS=(
+        "$localinstalldirectory/Get Ghost Scripts/JCore92 Script Collection - Repository.ghost"
+        "$localinstalldirectory/Linux Commands/Find - Classic.ghost"
+        "$localinstalldirectory/Linux Commands/Find - Modern.ghost"
+        # Add more legacy filenames here as needed
+    )
+
+    # Run cleanup for each file
+    for oldfile in "${OLD_SCRIPTS[@]}"; do
+        cleanup_old_file "$oldfile"
+    done
+
+}
 
 download_update() {
     # Define an array of files and their corresponding directories
@@ -139,6 +166,7 @@ to $directory/$decoded_filename"
 }
 
 # Main script execution
+cleanup_old_files
 checkforupdates
 show_warning
 download_files
